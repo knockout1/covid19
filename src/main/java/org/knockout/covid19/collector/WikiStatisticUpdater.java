@@ -1,11 +1,18 @@
 package org.knockout.covid19.collector;
 
+import com.google.common.primitives.Ints;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.knockout.covid19.model.DailyStats;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class WikiStatisticUpdater implements StatisticUpdater {
     private final String url;
@@ -25,11 +32,32 @@ public class WikiStatisticUpdater implements StatisticUpdater {
                     .get();
             Element table = doc.select("table[class=wikitable sortable mw-collapsible " +
                     "floatright]").first();
-//            Iterator<Element> ite = table.select("td[width=65]").iterator();
-//            ite.next().text();
-            System.out.println(table);
-        } catch (IOException e) {
+            Elements rows = table.select("tr");
+            List<DailyStats> dailyStats = new ArrayList<>();
+            SimpleDateFormat formatter = new SimpleDateFormat("dd MMMM yyyy");
+            for (Element row : rows) {
+                Elements columns = row.select("td");
+                if (!isTableHeaderOrFooter(columns)) {
+                    DailyStats dailyStat = new DailyStats();
+                    dailyStat.setDate(formatter.parse(columns.get(0).text()));
+                    dailyStat.setSuspected(Optional.ofNullable(columns.get(1).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setQuarantined(Optional.ofNullable(columns.get(2).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setMonitored(Optional.ofNullable(columns.get(3).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setTotalTested(Optional.ofNullable(columns.get(4).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setConfirmedDaily(Optional.ofNullable(columns.get(5).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setUpToDateConfirmed(Optional.ofNullable(columns.get(6).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setRecovered(Optional.ofNullable(columns.get(7).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setOfficialDeathsDaily(Optional.ofNullable(columns.get(8).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setUnofficialDeathsDaily(Optional.ofNullable(columns.get(9).text()).map(Ints::tryParse).orElse(0));
+                    dailyStats.add(dailyStat);
+                }
+            }
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isTableHeaderOrFooter(Elements row) {
+        return (row.size() < 10 || row.get(0).text().equals("Total"));
     }
 }
