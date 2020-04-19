@@ -1,9 +1,16 @@
 package org.knockout.covid19.model;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import java.util.Date;
 import java.util.StringJoiner;
 
+@Entity
 public class DailyStats {
+    @Id
+    @GeneratedValue
+    int id;
     Date date;
     int suspected;
     int quarantined;

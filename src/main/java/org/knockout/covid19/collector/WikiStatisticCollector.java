@@ -14,16 +14,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class WikiStatisticUpdater implements StatisticUpdater {
+public class WikiStatisticCollector implements StatisticCollector {
     private final String url;
     private final int connectionTimeoutMs = 10000;
 
-    public WikiStatisticUpdater(String url) {
+    public WikiStatisticCollector(String url) {
         this.url = url;
     }
 
     @Override
-    public void updateStatistic() {
+    public List<DailyStats> getStatistic() {
+        List<DailyStats> dailyStats = new ArrayList<>();
         try {
             Document doc = Jsoup.connect(url)
                     .data("query", "Java")
@@ -33,7 +34,6 @@ public class WikiStatisticUpdater implements StatisticUpdater {
             Element table = doc.select("table[class=wikitable sortable mw-collapsible " +
                     "floatright]").first();
             Elements rows = table.select("tr");
-            List<DailyStats> dailyStats = new ArrayList<>();
             SimpleDateFormat formatter = new SimpleDateFormat("dd MMMM yyyy");
             for (Element row : rows) {
                 Elements columns = row.select("td");
@@ -55,6 +55,7 @@ public class WikiStatisticUpdater implements StatisticUpdater {
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
+        return dailyStats;
     }
 
     private boolean isTableHeaderOrFooter(Elements row) {
