@@ -6,6 +6,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.knockout.covid19.model.DailyStats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -15,8 +17,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class WikiStatisticCollector implements StatisticCollector {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WikiStatisticCollector.class);
     private final String url;
-    private final int connectionTimeoutMs = 10000;
 
     public WikiStatisticCollector(String url) {
         this.url = url;
@@ -26,11 +28,9 @@ public class WikiStatisticCollector implements StatisticCollector {
     public List<DailyStats> getStatistic() {
         List<DailyStats> dailyStats = new ArrayList<>();
         try {
-            Document doc = Jsoup.connect(url)
-                    .data("query", "Java")
-                    .userAgent("Mozilla")
-                    .timeout(connectionTimeoutMs)
-                    .get();
+            int connectionTimeoutMs = 10000;
+            Document doc =
+                    Jsoup.connect(url).userAgent("Mozilla").timeout(connectionTimeoutMs).get();
             Element table = doc.select("table[class=wikitable sortable mw-collapsible " +
                     "floatright]").first();
             Elements rows = table.select("tr");
@@ -40,25 +40,33 @@ public class WikiStatisticCollector implements StatisticCollector {
                 if (!isTableHeaderOrFooter(columns)) {
                     DailyStats dailyStat = new DailyStats();
                     dailyStat.setDate(formatter.parse(columns.get(0).text()));
-                    dailyStat.setSuspected(Optional.ofNullable(columns.get(1).text()).map(Ints::tryParse).orElse(0));
-                    dailyStat.setQuarantined(Optional.ofNullable(columns.get(2).text()).map(Ints::tryParse).orElse(0));
-                    dailyStat.setMonitored(Optional.ofNullable(columns.get(3).text()).map(Ints::tryParse).orElse(0));
-                    dailyStat.setTotalTested(Optional.ofNullable(columns.get(4).text()).map(Ints::tryParse).orElse(0));
-                    dailyStat.setConfirmedDaily(Optional.ofNullable(columns.get(5).text()).map(Ints::tryParse).orElse(0));
-                    dailyStat.setUpToDateConfirmed(Optional.ofNullable(columns.get(6).text()).map(Ints::tryParse).orElse(0));
-                    dailyStat.setRecovered(Optional.ofNullable(columns.get(7).text()).map(Ints::tryParse).orElse(0));
-                    dailyStat.setOfficialDeathsDaily(Optional.ofNullable(columns.get(8).text()).map(Ints::tryParse).orElse(0));
-                    dailyStat.setUnofficialDeathsDaily(Optional.ofNullable(columns.get(9).text()).map(Ints::tryParse).orElse(0));
+                    dailyStat.setSuspected(parseCell(columns.get(1).text()));
+                    dailyStat.setQuarantined(parseCell(columns.get(2).text()));
+                    dailyStat.setMonitored(parseCell(columns.get(3).text()));
+                    dailyStat.setTotalTested(parseCell(columns.get(4).text()));
+                    dailyStat.setConfirmedDaily(parseCell(columns.get(5).text()));
+                    dailyStat.setUpToDateConfirmed(parseCell(columns.get(6).text()));
+                    dailyStat.setRecovered(parseCell(columns.get(7).text()));
+                    dailyStat.setOfficialDeathsDaily(parseCell(columns.get(8).text()));
+                    dailyStat.setUnofficialDeathsDaily(parseCell(columns.get(9).text()));
                     dailyStats.add(dailyStat);
                 }
             }
         } catch (IOException | ParseException e) {
-            e.printStackTrace();
+            LOGGER.warn("Error parsing  statistics: {}", e.getMessage());
         }
         return dailyStats;
     }
 
     private boolean isTableHeaderOrFooter(Elements row) {
         return (row.size() < 10 || row.get(0).text().equals("Total"));
+    }
+
+    private int parseCell(String cell) {
+        cell = cell.replace(",", "");
+        if (cell.contains("[")) {
+            cell = cell.substring(0, cell.indexOf("["));
+        }
+        return Optional.of(cell).map(Ints::tryParse).orElse(0);
     }
 }

@@ -22,6 +22,14 @@ public class DailyStats {
     int officialDeathsDaily;
     int unofficialDeathsDaily;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public Date getDate() {
         return date;
     }
@@ -105,6 +113,7 @@ public class DailyStats {
     @Override
     public String toString() {
         return new StringJoiner(", ", DailyStats.class.getSimpleName() + "[", "]")
+                .add("id=" + id)
                 .add("date=" + date)
                 .add("suspected=" + suspected)
                 .add("quarantined=" + quarantined)
