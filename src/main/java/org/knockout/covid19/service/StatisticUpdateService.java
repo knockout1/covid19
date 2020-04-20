@@ -10,7 +10,6 @@ import java.util.List;
 
 @Service
 public class StatisticUpdateService {
-
     private final StatisticCollector statisticCollector;
     private final StatsRepository statsRepository;
 
