@@ -8,11 +8,12 @@ import java.util.Date;
 import java.util.StringJoiner;
 
 @Entity
-@Table(name = "stats")
-public class DailyStats {
+@Table(name = "statsBackup")
+public class StatsBackup {
     @Id
     @GeneratedValue
     int id;
+    Date statsBackupDate;
     Date date;
     int suspected;
     int quarantined;
@@ -23,6 +24,14 @@ public class DailyStats {
     int recovered;
     int officialDeathsDaily;
     int unofficialDeathsDaily;
+
+    public Date getStatsBackupDate() {
+        return statsBackupDate;
+    }
+
+    public void setStatsBackupDate(Date statsBackupDate) {
+        this.statsBackupDate = statsBackupDate;
+    }
 
     public int getId() {
         return id;
@@ -114,8 +123,9 @@ public class DailyStats {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", DailyStats.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", StatsBackup.class.getSimpleName() + "[", "]")
                 .add("id=" + id)
+                .add("statsBackupDate=" + statsBackupDate)
                 .add("date=" + date)
                 .add("suspected=" + suspected)
                 .add("quarantined=" + quarantined)
@@ -129,3 +139,4 @@ public class DailyStats {
                 .toString();
     }
 }
+
