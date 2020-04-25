@@ -6,6 +6,7 @@ import org.knockout.covid19.model.StatsBackup;
 import org.knockout.covid19.repository.StatsBackupRepository;
 import org.knockout.covid19.repository.StatsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -27,7 +28,9 @@ public class StatisticUpdateService {
         this.statsBackupRepository = statsBackupRepository;
     }
 
+    @Scheduled(cron = "0 0 10,20 * * *")
     public void forceUpdate() {
+        System.out.println("update started");
         List<DailyStats> dailyStats = statisticCollector.getStatistic();
         List<DailyStats> currentStats = statsRepository.findAll();
         for (DailyStats dailyStat : currentStats) {

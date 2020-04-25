@@ -4,7 +4,9 @@ import org.knockout.covid19.collector.StatisticCollector;
 import org.knockout.covid19.collector.WikiStatisticCollector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+@EnableScheduling
 @Configuration
 public class ApplicationConfig {
     @Bean
